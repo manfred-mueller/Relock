@@ -187,6 +187,15 @@ namespace Relock.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die register in the explorer context menu. ähnelt.
+        /// </summary>
+        public static string RegisterInTheExplorerContextMenu {
+            get {
+                return ResourceManager.GetString("RegisterInTheExplorerContextMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die Registry key not found. ähnelt.
         /// </summary>
         public static string RegistryKeyNotFound {
@@ -202,6 +211,15 @@ namespace Relock.Properties {
             get {
                 object obj = ResourceManager.GetObject("relock", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Relock {0} - (re)lock a bitlocker enabled drive, ©2024 - Manfred Mueller ähnelt.
+        /// </summary>
+        public static string Relock0ReLockABitlockerEnabledDrive2024ManfredMueller {
+            get {
+                return ResourceManager.GetString("Relock0ReLockABitlockerEnabledDrive2024ManfredMueller", resourceCulture);
             }
         }
         
@@ -233,14 +251,20 @@ namespace Relock.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die Relock locks an unlocked bitlocker enabled drive via its context menu
-        ///and shows the recovery key as a qr code. The code can be saved as pdf file.
-        ///As the first parameter the program requires a drive letter for relocking or
-        ////register or /unregister to register in the explorer context menu. ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die unregister from the explorer context menu. ähnelt.
         /// </summary>
-        public static string TheProgramRequiresADriveLetterOrRegisterOrUnregisterAsTheFirstParameter {
+        public static string UnregisterFromTheExplorerContextMenu {
             get {
-                return ResourceManager.GetString("TheProgramRequiresADriveLetterOrRegisterOrUnregisterAsTheFirstParameter", resourceCulture);
+                return ResourceManager.GetString("UnregisterFromTheExplorerContextMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Usage: relock [/register or /unregister] ähnelt.
+        /// </summary>
+        public static string UsageRelockRegisterUnregister {
+            get {
+                return ResourceManager.GetString("UsageRelockRegisterUnregister", resourceCulture);
             }
         }
     }

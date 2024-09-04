@@ -6,19 +6,29 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using ZXing;
+using Version = System.Version;
 
 namespace Relock
 {
     internal static class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool FreeConsole();
+
         [STAThread]
         private static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            // Try to attach to the parent process's console, if it exists
+            bool isConsoleAttached = AttachConsole(ATTACH_PARENT_PROCESS);
 
             if (args.Length > 0)
             {
@@ -32,6 +42,8 @@ namespace Relock
                         UnregisterFromRegistry();
                         break;
                     default:
+                        Application.EnableVisualStyles();
+                        Application.SetCompatibleTextRenderingDefault(false);
                         getRecoveryKey(drive);
                         lockDrive(drive);
                         break;
@@ -39,9 +51,23 @@ namespace Relock
             }
             else
             {
-                MessageBox.Show(Properties.Resources.TheProgramRequiresADriveLetterOrRegisterOrUnregisterAsTheFirstParameter, "Relock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (isConsoleAttached)
+                {
+                    Version version = Assembly.GetExecutingAssembly().GetName().Version;
+
+                    string relockVersion = $"{version.Major}.{version.Minor}.{version.Build}";
+                    Console.WriteLine("\n" +
+                        String.Format(Properties.Resources.Relock0ReLockABitlockerEnabledDrive2024ManfredMueller, relockVersion) + "\n\n" +
+                        Properties.Resources.UsageRelockRegisterUnregister + "\n" +
+                        "/register\t" + Properties.Resources.RegisterInTheExplorerContextMenu + "\n" +
+                        "/unregister\t" + Properties.Resources.UnregisterFromTheExplorerContextMenu
+                    );
+                    FreeConsole();
+                    Environment.Exit(0);
+                }
             }
         }
+
         public static void RegisterInRegistry()
         {
             string keyName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\Drive\\shell\\relock-bde";

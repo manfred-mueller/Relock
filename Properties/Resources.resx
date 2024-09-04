@@ -129,12 +129,6 @@
   <data name="RelockThisDrive" xml:space="preserve">
     <value>Relock this drive</value>
   </data>
-  <data name="TheProgramRequiresADriveLetterOrRegisterOrUnregisterAsTheFirstParameter" xml:space="preserve">
-    <value>Relock locks an unlocked bitlocker enabled drive via its context menu
-and shows the recovery key as a qr code. The code can be saved as pdf file.
-As the first parameter the program requires a drive letter for relocking or
-/register or /unregister to register in the explorer context menu.</value>
-  </data>
   <data name="ProgramSuccessfullyRegisteredInTheRegistry" xml:space="preserve">
     <value>Program successfully registered in the registry.</value>
   </data>
@@ -180,5 +174,17 @@ As the first parameter the program requires a drive letter for relocking or
   </data>
   <data name="OutputError" xml:space="preserve">
     <value>ERROR: </value>
+  </data>
+  <data name="Relock0ReLockABitlockerEnabledDrive2024ManfredMueller" xml:space="preserve">
+    <value>Relock {0} - (re)lock a bitlocker enabled drive, ©2024 - Manfred Mueller</value>
+  </data>
+  <data name="RegisterInTheExplorerContextMenu" xml:space="preserve">
+    <value>register in the explorer context menu.</value>
+  </data>
+  <data name="UnregisterFromTheExplorerContextMenu" xml:space="preserve">
+    <value>unregister from the explorer context menu.</value>
+  </data>
+  <data name="UsageRelockRegisterUnregister" xml:space="preserve">
+    <value>Usage: relock [/register or /unregister]</value>
   </data>
 </root>

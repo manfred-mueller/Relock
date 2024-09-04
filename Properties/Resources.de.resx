@@ -156,12 +156,6 @@
   <data name="PrinterNotFound" xml:space="preserve">
     <value>Drucker nicht gefunden</value>
   </data>
-  <data name="TheProgramRequiresADriveLetterOrRegisterOrUnregisterAsTheFirstParameter" xml:space="preserve">
-    <value>Relock sperrt ein entsperrtes Bitlocker-fähiges Laufwerk über dessen Kontextmenü
-und zeigt den Wiederherstellungsschlüssel in Form eines speicherbaren QR-Codes an.
-Als ersten Parameter benötigt das Programm einen Laufwerksbuchstaben zum Sperren oder
-/register oder /unregister zur Registrierung im Explorer-Kontextmenü.</value>
-  </data>
   <data name="Save" xml:space="preserve">
     <value>Speichern</value>
   </data>
@@ -173,5 +167,20 @@ Als ersten Parameter benötigt das Programm einen Laufwerksbuchstaben zum Sperre
   </data>
   <data name="PDFFilesPdfPdf" xml:space="preserve">
     <value>PDF-Dateien (*.pdf)|*.pdf</value>
+  </data>
+  <data name="OutputError" xml:space="preserve">
+    <value>FEHLER: </value>
+  </data>
+  <data name="Relock0ReLockABitlockerEnabledDrive2024ManfredMueller" xml:space="preserve">
+    <value>Relock {0} - ein Bitlocker-fähiges Laufwerk (wieder) sperren, ©2024 - Manfred Mueller</value>
+  </data>
+  <data name="RegisterInTheExplorerContextMenu" xml:space="preserve">
+    <value>im Kontextmenü des Explorers registrieren.</value>
+  </data>
+  <data name="UnregisterFromTheExplorerContextMenu" xml:space="preserve">
+    <value>im Kontextmenü des Explorers die Registrierung aufheben.</value>
+  </data>
+  <data name="UsageRelockRegisterUnregister" xml:space="preserve">
+    <value>Aufruf: relock [/register oder /unregister]</value>
   </data>
 </root>
