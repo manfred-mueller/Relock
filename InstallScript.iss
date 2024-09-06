@@ -31,19 +31,19 @@ UninstallDisplayIcon={uninstallexe}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-SignTool=CertumVS
+SignTool=Certum
 
 [Languages]
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 
 [Files]
-Source: "bin\Release\Relock.exe"; DestDir: "{userpf}"; DestName: "Relock.exe"; Flags: confirmoverwrite; MinVersion: 0,6.0sp2
+Source: "bin\Release\Relock.exe"; DestDir: "{userpf}/{#MyAppName}"; DestName: "Relock.exe"; Flags: confirmoverwrite; MinVersion: 0,6.0sp2
 
 [Run]
-Filename: "{userpf}\Relock.exe"; Parameters: "/register"; Flags: postinstall
+Filename: "{userpf}/{#MyAppName}\Relock.exe"; Parameters: "/register"; Flags: postinstall shellexec; Verb: "runas"
 
 [UninstallRun]
-Filename: "{userpf}\Relock.exe"; Parameters: "/unregister"
+Filename: "{userpf}/{#MyAppName}\Relock.exe"; Parameters: "/unregister"
 
 [UninstallDelete]
-Type: files; Name: "{userpf}\relock.exe"
+Type: files; Name: "{userpf}/{#MyAppName}\Relock.exe"
