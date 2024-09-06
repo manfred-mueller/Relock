@@ -75,7 +75,7 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            <h2>Changelog:</h2> ${{ github.event_name == 'push' && env.COMMIT_MESSAGE || 'Automatic release' }}
+            ${{ github.event_name == 'push' && env.COMMIT_MESSAGE || 'Automatic release' }}
 
             ${{ env.README_CONTENT }}
         env:
