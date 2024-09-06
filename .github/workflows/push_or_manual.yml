@@ -75,10 +75,8 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            ## Changelog
-            ${{ github.event_name == 'push' && env.COMMIT_MESSAGE || 'Automatic release' }}
+            <h2>Changelog:</h2> ${{ github.event_name == 'push' && env.COMMIT_MESSAGE || 'Automatic release' }}
 
-            ## README
             ${{ env.README_CONTENT }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
