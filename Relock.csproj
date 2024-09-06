@@ -300,7 +300,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>D:\tools\sign.cmd "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>D:\Tools\sign.cmd $(TargetPath) &amp;&amp; iscc /Q $(SolutionDir)InstallScript.iss</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

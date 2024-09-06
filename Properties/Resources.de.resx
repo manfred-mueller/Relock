@@ -183,4 +183,7 @@
   <data name="UsageRelockRegisterUnregister" xml:space="preserve">
     <value>Aufruf: relock [/register oder /unregister]</value>
   </data>
+  <data name="PressEnterToLeave" xml:space="preserve">
+    <value>Drücke [Enter] zum Verlassen</value>
+  </data>
 </root>

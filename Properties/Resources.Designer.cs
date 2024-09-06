@@ -133,6 +133,15 @@ namespace Relock.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Press [Enter] to leave ähnelt.
+        /// </summary>
+        public static string PressEnterToLeave {
+            get {
+                return ResourceManager.GetString("PressEnterToLeave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die Print ähnelt.
         /// </summary>
         public static string Print {

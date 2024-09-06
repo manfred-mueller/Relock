@@ -15,21 +15,45 @@ using Version = System.Version;
 
 namespace Relock
 {
-    internal static class Program
+    static class Program
     {
+        // Import AttachConsole and FreeConsole from Kernel32.dll
         [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
+        static extern bool AttachConsole(int dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool FreeConsole();
+        static extern bool FreeConsole();
 
-        [STAThread]
+        // Import WriteConsoleInput to simulate input
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool WriteConsoleInput(IntPtr hConsoleInput, [In] INPUT_RECORD[] lpBuffer, uint nLength, out uint lpNumberOfEventsWritten);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetStdHandle(int nStdHandle);
+
+        const int STD_INPUT_HANDLE = -10;
+        const int ATTACH_PARENT_PROCESS = -1;
+
+        // Define INPUT_RECORD struct for input events
+        struct INPUT_RECORD
+        {
+            public ushort EventType;
+            public KEY_EVENT_RECORD KeyEvent;
+        }
+
+        // Define KEY_EVENT_RECORD struct
+        struct KEY_EVENT_RECORD
+        {
+            public bool bKeyDown;
+            public ushort wRepeatCount;
+            public ushort wVirtualKeyCode;
+            public ushort wVirtualScanCode;
+            public char uChar;
+            public uint dwControlKeyState;
+        }
+
         private static void Main(string[] args)
         {
-            // Try to attach to the parent process's console, if it exists
-            bool isConsoleAttached = AttachConsole(ATTACH_PARENT_PROCESS);
-
             if (args.Length > 0)
             {
                 string drive = args[0].ToLower();
@@ -51,21 +75,51 @@ namespace Relock
             }
             else
             {
-                if (isConsoleAttached)
-                {
-                    Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                // Versioning information for display
+                Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                string relockVersion = $"{version.Major}.{version.Minor}.{version.Build}";
 
-                    string relockVersion = $"{version.Major}.{version.Minor}.{version.Build}";
-                    Console.WriteLine("\n" +
-                        String.Format(Properties.Resources.Relock0ReLockABitlockerEnabledDrive2024ManfredMueller, relockVersion) + "\n\n" +
-                        Properties.Resources.UsageRelockRegisterUnregister + "\n" +
-                        "/register\t" + Properties.Resources.RegisterInTheExplorerContextMenu + "\n" +
-                        "/unregister\t" + Properties.Resources.UnregisterFromTheExplorerContextMenu
-                    );
-                    FreeConsole();
-                    Environment.Exit(0);
-                }
+                // Attach to parent console (e.g., command line if launched from there)
+                AttachConsole(ATTACH_PARENT_PROCESS);
+
+                // Display version and usage information in the console
+                Console.WriteLine("\n" +
+                    String.Format(Properties.Resources.Relock0ReLockABitlockerEnabledDrive2024ManfredMueller, relockVersion) + "\n\n" +
+                    Properties.Resources.UsageRelockRegisterUnregister + "\n" +
+                    "/register\t" + Properties.Resources.RegisterInTheExplorerContextMenu + "\n" +
+                    "/unregister\t" + Properties.Resources.UnregisterFromTheExplorerContextMenu
+                );
+
+                // Emulate Enter key press to simulate user pressing "Enter"
+                SimulateEnterKeyPress();
+
+                // Ensure the console is released immediately after writing
+                FreeConsole();
+
+                // Exit the application cleanly
+                Environment.Exit(0); // Exit code 0 means success
             }
+        }
+
+        // Method to simulate Enter key press
+        private static void SimulateEnterKeyPress()
+        {
+            IntPtr stdInputHandle = GetStdHandle(STD_INPUT_HANDLE);
+
+            INPUT_RECORD[] records = new INPUT_RECORD[2];
+            records[0].EventType = 0x0001; // KEY_EVENT
+            records[0].KeyEvent.bKeyDown = true;
+            records[0].KeyEvent.wVirtualKeyCode = 0x0D; // Virtual code for "Enter"
+            records[0].KeyEvent.wVirtualScanCode = 0x1C;
+            records[0].KeyEvent.uChar = '\r';
+
+            records[1].EventType = 0x0001; // KEY_EVENT
+            records[1].KeyEvent.bKeyDown = false;
+            records[1].KeyEvent.wVirtualKeyCode = 0x0D; // Virtual code for "Enter"
+            records[1].KeyEvent.wVirtualScanCode = 0x1C;
+            records[1].KeyEvent.uChar = '\r';
+
+            WriteConsoleInput(stdInputHandle, records, (uint)records.Length, out _);
         }
 
         public static void RegisterInRegistry()
