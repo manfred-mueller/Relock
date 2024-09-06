@@ -1,0 +1,158 @@
+name: Create Release on Push or Manual Trigger
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'bin/Release/**'  # Only run the workflow when files in this path are pushed
+  workflow_dispatch:
+
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Find setup file and extract version
+        id: get_version
+        run: |
+          SETUP_FILE=$(ls ./bin/Release/${{ env.REPO_NAME }}_setup-*.exe | tail -n 1)
+          if [ -z "$SETUP_FILE" ]; then
+            echo "Setup file not found!"
+            exit 1
+          fi
+          VERSION=$(basename "$SETUP_FILE" | sed -E "s/${{ env.REPO_NAME }}_setup-(.*)\.exe/\1/")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Setup file is: $SETUP_FILE"
+          echo "Version extracted: $VERSION"
+
+      - name: Delete existing tag
+        run: |
+          git tag -d ${{ env.VERSION }} || true
+          git push --delete origin ${{ env.VERSION }} || true
+        env:
+          VERSION: ${{ env.VERSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete existing release
+        run: |
+          gh release delete ${{ env.VERSION }} -y || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ env.VERSION }}
+
+      - name: Read README.md
+        id: read_readme
+        run: |
+          # Read the README.md file and store its content in an environment variable
+          echo "README_CONTENT<<EOF" >> $GITHUB_ENV
+          cat README.md >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Capture commit message
+        id: capture_commit_message
+        if: github.event_name == 'push'
+        run: echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          body: |
+            ## Changelog
+            ${{ github.event_name == 'push' && env.COMMIT_MESSAGE || 'Automatic release for version ${{ env.VERSION }}' }}
+
+            ## README
+            ${{ env.README_CONTENT }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload <reponame>.exe
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/Release/${{ env.REPO_NAME }}.exe
+          asset_name: ${{ env.REPO_NAME }}.exe
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload <reponame>_setup-<version>.exe
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/Release/${{ env.REPO_NAME }}_setup-${{ env.VERSION }}.exe
+          asset_name: ${{ env.REPO_NAME }}_setup-${{ env.VERSION }}.exe
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Set up dependency caching for faster builds
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
+
+  deploy:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Development'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: .net-app
+
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
