@@ -83,7 +83,7 @@ namespace Relock
                 AttachConsole(ATTACH_PARENT_PROCESS);
 
                 // Display version and usage information in the console
-                Console.WriteLine("\n" +
+                Console.WriteLine("\n\n" +
                     String.Format(Properties.Resources.Relock0ReLockABitlockerEnabledDrive2024ManfredMueller, relockVersion) + "\n\n" +
                     Properties.Resources.UsageRelockRegisterUnregister + "\n" +
                     "/register\t" + Properties.Resources.RegisterInTheExplorerContextMenu + "\n" +

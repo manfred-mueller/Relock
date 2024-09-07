@@ -172,7 +172,7 @@
     <value>FEHLER: </value>
   </data>
   <data name="Relock0ReLockABitlockerEnabledDrive2024ManfredMueller" xml:space="preserve">
-    <value>Relock {0} - ein Bitlocker-fähiges Laufwerk (wieder) sperren, ©2024 - Manfred Mueller</value>
+    <value>Relock {0} - Ein Bitlocker-fähiges Laufwerk (wieder) sperren, ©2024 - Manfred Mueller</value>
   </data>
   <data name="RegisterInTheExplorerContextMenu" xml:space="preserve">
     <value>im Kontextmenü des Explorers registrieren.</value>
