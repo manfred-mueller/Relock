@@ -165,9 +165,6 @@
   <data name="Error" xml:space="preserve">
     <value>Fehler</value>
   </data>
-  <data name="PDFFilesPdfPdf" xml:space="preserve">
-    <value>PDF-Dateien (*.pdf)|*.pdf</value>
-  </data>
   <data name="OutputError" xml:space="preserve">
     <value>FEHLER: </value>
   </data>
@@ -185,5 +182,26 @@
   </data>
   <data name="PressEnterToLeave" xml:space="preserve">
     <value>Drücke [Enter] zum Verlassen</value>
+  </data>
+  <data name="DoYouWantToPrintTheRecoveryKey" xml:space="preserve">
+    <value>Möchten Sie den Wiederherstellungsschlüssel ausdrucken?</value>
+  </data>
+  <data name="PDFFilesPdfPNGImagePngJPEGImageJpg" xml:space="preserve">
+    <value>PDF-Datei|*.pdf|PNG-Bild|*.png|JPEG-Bild|*.jpg</value>
+  </data>
+  <data name="RecoveryKeyCopiedToClipboard" xml:space="preserve">
+    <value>Wiederherstellungsschlüssel in die Zwischenablage kopiert.</value>
+  </data>
+  <data name="FailedToCopyToClipboardPleaseTryAgain" xml:space="preserve">
+    <value>Kopieren in die Zwischenablage fehlgeschlagen. Bitte versuchen Sie es erneut.</value>
+  </data>
+  <data name="Mask" xml:space="preserve">
+    <value>Maskieren</value>
+  </data>
+  <data name="Unmask" xml:space="preserve">
+    <value>Anzeigen</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Kopieren</value>
   </data>
 </root>

@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using ZXing;
 using Version = System.Version;
@@ -52,6 +53,7 @@ namespace Relock
             public uint dwControlKeyState;
         }
 
+        [STAThread]
         private static void Main(string[] args)
         {
             if (args.Length > 0)
@@ -125,10 +127,11 @@ namespace Relock
         public static void RegisterInRegistry()
         {
             string keyName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\Drive\\shell\\relock-bde";
+            string shellParent = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\Drive\\shell";
             string _vDefault = Properties.Resources.RelockThisDrive;
             const string _vAppliesTo = "System.Volume.BitLockerProtection:=System.Volume.BitLockerProtection#On OR System.Volume.BitLockerProtection:=System.Volume.BitLockerProtection#Encrypting OR System.Volume.BitLockerProtection:=System.Volume.BitLockerProtection#Suspended";
             const string _vMultiSelectModel = "Single";
-            string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string appPath = Assembly.GetExecutingAssembly().Location;
             string appIcon = appPath + ",0";  // Assuming the icon is the first resource in the executable
 
             try
@@ -142,6 +145,8 @@ namespace Relock
                 string _vCommandValue = appPath + " %1";
 
                 Registry.SetValue(commandKeyName, "", _vCommandValue);
+
+                Registry.SetValue(shellParent, "", "relock-bde");  // make this verb the default (bold)
 
                 MessageBox.Show(Properties.Resources.ProgramSuccessfullyRegisteredInTheRegistry, "Relock", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -206,7 +211,7 @@ namespace Relock
                     {
                         if (!string.IsNullOrEmpty(e.Data))
                         {
-                            outputBuilder.AppendLine(Relock.Properties.Resources.OutputError + e.Data);
+                            outputBuilder.AppendLine(Properties.Resources.OutputError + e.Data);
                         }
                     };
 
@@ -226,6 +231,10 @@ namespace Relock
                     {
                         // Remove spaces and get the result
                         string result = line.Replace(" ", string.Empty);
+
+                        // Keep original recovery key for copy/unmask
+                        string originalRecoveryKey = result;
+                        bool isMasked = true;
 
                         // Generate QR code image
                         string qrData = $"{result}";
@@ -275,6 +284,8 @@ namespace Relock
                                     System.Drawing.Font font = AdjustFontToFitLabel(recoveryKeyLabel, result);
                                     recoveryKeyLabel.Font = font;
 
+                                    recoveryKeyLabel.Text = MaskKey(originalRecoveryKey);
+
                                     // Create the label for the drive letter
                                     Label driveLabel = new Label
                                     {
@@ -289,6 +300,14 @@ namespace Relock
                                     // Adjust font size to fit the label width
                                     System.Drawing.Font driveFont = AdjustFontToFitLabel(driveLabel, driveLabel.Text);
                                     driveLabel.Font = driveFont;
+
+                                    // Local helper to mask key
+                                    string MaskKey(string key)
+                                    {
+                                        if (string.IsNullOrEmpty(key)) return key;
+                                        if (key.Length <= 4) return new string('\u2022', key.Length);
+                                        return new string('\u2022', key.Length - 4) + key.Substring(key.Length - 4);
+                                    }
 
                                     // Create the form
                                     Form form = new Form
@@ -314,26 +333,31 @@ namespace Relock
 
                                     printButton.Click += (sender, e) =>
                                     {
-                                        PrintDocument printDocument = new PrintDocument();
-                                        printDocument.PrintPage += (s, ev) =>
-                                        {
-                                            float margin = 10;
-                                            float xCenter = (ev.PageBounds.Width - pictureBox.Width) / 2;
-                                            float y = margin;
+                                        var confirm = MessageBox.Show(Properties.Resources.DoYouWantToPrintTheRecoveryKey, "Relock", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                                        if (confirm != DialogResult.Yes) return;
 
-                                            ev.Graphics.DrawString(driveLabel.Text, driveLabel.Font, Brushes.Black, xCenter, y);
-                                            y += driveLabel.Height + margin;
-                                            ev.Graphics.DrawImage(pictureBox.Image, xCenter, y);
-                                            y += pictureBox.Height + margin;
-                                            ev.Graphics.DrawString(recoveryKeyLabel.Text, recoveryKeyLabel.Font, Brushes.Black, xCenter, y);
-                                        };
-
-                                        using (PrintDialog printDialog = new PrintDialog())
+                                        using (PrintDocument printDocument = new PrintDocument())
                                         {
-                                            printDialog.Document = printDocument;
-                                            if (printDialog.ShowDialog() == DialogResult.OK)
+                                            printDocument.PrintPage += (s, ev) =>
                                             {
-                                                printDocument.Print();
+                                                float margin = 10;
+                                                float xCenter = (ev.PageBounds.Width - pictureBox.Width) / 2;
+                                                float y = margin;
+
+                                                ev.Graphics.DrawString(driveLabel.Text, driveLabel.Font, Brushes.Black, xCenter, y);
+                                                y += driveLabel.Height + margin;
+                                                ev.Graphics.DrawImage(pictureBox.Image, xCenter, y);
+                                                y += pictureBox.Height + margin;
+                                                ev.Graphics.DrawString(recoveryKeyLabel.Text, recoveryKeyLabel.Font, Brushes.Black, xCenter, y);
+                                            };
+
+                                            using (PrintDialog printDialog = new PrintDialog())
+                                            {
+                                                printDialog.Document = printDocument;
+                                                if (printDialog.ShowDialog() == DialogResult.OK)
+                                                {
+                                                    printDocument.Print();
+                                                }
                                             }
                                         }
                                     };
@@ -351,58 +375,184 @@ namespace Relock
                                         {
                                             CreatePrompt = true,
                                             OverwritePrompt = true,
-                                            Filter = Relock.Properties.Resources.PDFFilesPdfPdf,
+                                            Filter = Properties.Resources.PDFFilesPdfPNGImagePngJPEGImageJpg,
                                             DefaultExt = "pdf",
                                             FileName = "RecoveryKey.pdf"
                                         };
 
                                         if (saveFileDialog.ShowDialog() == DialogResult.OK)
                                         {
-                                            // Create the PDF document
-                                            using (var pdfDocument = new iTextSharp.text.Document())
+                                            string ext = Path.GetExtension(saveFileDialog.FileName).ToLowerInvariant();
+
+                                            if (ext == ".pdf")
                                             {
-                                                PdfWriter.GetInstance(pdfDocument, new FileStream(saveFileDialog.FileName, FileMode.Create));
-                                                pdfDocument.Open();
-
-                                                // Add the drive label text
-                                                var driveLabelParagraph = new iTextSharp.text.Paragraph(driveLabel.Text, FontFactory.GetFont("Arial", driveLabel.Font.Size, iTextSharp.text.Font.BOLD))
+                                                // Create the PDF document
+                                                using (var pdfDocument = new Document())
                                                 {
-                                                    Alignment = Element.ALIGN_CENTER,
-                                                    SpacingAfter = 20f
-                                                };
-                                                pdfDocument.Add(driveLabelParagraph);
+                                                    PdfWriter.GetInstance(pdfDocument, new FileStream(saveFileDialog.FileName, FileMode.Create));
+                                                    pdfDocument.Open();
 
-                                                // Add the QR code image
-                                                using (var qrStream = new MemoryStream())
-                                                {
-                                                    qrImage.Save(qrStream, System.Drawing.Imaging.ImageFormat.Png);
-                                                    var qrPdfImage = iTextSharp.text.Image.GetInstance(qrStream.ToArray());
-                                                    qrPdfImage.Alignment = Element.ALIGN_CENTER;
-                                                    pdfDocument.Add(qrPdfImage);
+                                                    // Add the drive label text
+                                                    var driveLabelParagraph = new Paragraph(driveLabel.Text, FontFactory.GetFont("Arial", driveLabel.Font.Size, iTextSharp.text.Font.BOLD))
+                                                    {
+                                                        Alignment = Element.ALIGN_CENTER,
+                                                        SpacingAfter = 20f
+                                                    };
+                                                    pdfDocument.Add(driveLabelParagraph);
+
+                                                    // Add the QR code image
+                                                    using (var qrStream = new MemoryStream())
+                                                    {
+                                                        qrImage.Save(qrStream, System.Drawing.Imaging.ImageFormat.Png);
+                                                        var qrPdfImage = iTextSharp.text.Image.GetInstance(qrStream.ToArray());
+                                                        qrPdfImage.Alignment = Element.ALIGN_CENTER;
+                                                        pdfDocument.Add(qrPdfImage);
+                                                    }
+
+                                                    // Add the recovery key text
+                                                    var recoveryKeyParagraph = new Paragraph(recoveryKeyLabel.Text, FontFactory.GetFont("Arial", recoveryKeyLabel.Font.Size, iTextSharp.text.Font.BOLD))
+                                                    {
+                                                        Alignment = Element.ALIGN_CENTER,
+                                                        SpacingBefore = 20f
+                                                    };
+                                                    pdfDocument.Add(recoveryKeyParagraph);
+
+                                                    pdfDocument.Close();
                                                 }
+                                            }
+                                            else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
+                                            {
+                                                // Render combined image and save
+                                                int margin = 10;
+                                                int width = Math.Max(pictureBox.Width, 400) + margin * 2;
+                                                int height = driveLabel.Height + pictureBox.Height + recoveryKeyLabel.Height + margin * 5;
 
-                                                // Add the recovery key text
-                                                var recoveryKeyParagraph = new iTextSharp.text.Paragraph(recoveryKeyLabel.Text, FontFactory.GetFont("Arial", recoveryKeyLabel.Font.Size, iTextSharp.text.Font.BOLD))
+                                                using (Bitmap bmp = new Bitmap(width, height))
                                                 {
-                                                    Alignment = Element.ALIGN_CENTER,
-                                                    SpacingBefore = 20f
-                                                };
-                                                pdfDocument.Add(recoveryKeyParagraph);
+                                                    using (Graphics g = Graphics.FromImage(bmp))
+                                                    {
+                                                        g.Clear(Color.White);
 
-                                                pdfDocument.Close();
+                                                        int x = margin + (width - margin * 2 - pictureBox.Width) / 2;
+                                                        int y = margin;
+
+                                                        // Draw drive label
+                                                        using (Brush b = new SolidBrush(Color.Black))
+                                                        {
+                                                            g.DrawString(driveLabel.Text, driveLabel.Font, b, x, y);
+                                                        }
+
+                                                        y += driveLabel.Height + margin;
+
+                                                        // Draw QR
+                                                        g.DrawImage(qrImage, x, y);
+                                                        y += pictureBox.Height + margin;
+
+                                                        // Draw recovery key
+                                                        using (Brush b = new SolidBrush(Color.Black))
+                                                        {
+                                                            g.DrawString(recoveryKeyLabel.Text, recoveryKeyLabel.Font, b, x, y);
+                                                        }
+                                                    }
+
+                                                    if (ext == ".png")
+                                                    {
+                                                        bmp.Save(saveFileDialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
+                                                    }
+                                                    else
+                                                    {
+                                                        bmp.Save(saveFileDialog.FileName, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                                    }
+                                                }
                                             }
                                         }
                                     };
 
-                                    form.Controls.Add(printButton);
-                                    form.Controls.Add(saveButton);
+                                    // Create and configure the CopyButton
+                                    Button copyButton = new Button
+                                    {
+                                        Text = Properties.Resources.Copy,
+                                        AutoSize = true
+                                    };
+
+                                    copyButton.Click += (sender, e) =>
+                                    {
+                                        // Robust clipboard copy with retries because clipboard can be busy
+                                        const int maxRetries = 5;
+                                        const int retryDelayMs = 200;
+                                        bool success = false;
+                                        for (int i = 0; i < maxRetries; i++)
+                                        {
+                                            try
+                                            {
+                                                Clipboard.SetText(originalRecoveryKey);
+                                                success = true;
+                                                break;
+                                            }
+                                            catch (Exception)
+                                            {
+                                                Thread.Sleep(retryDelayMs);
+                                            }
+                                        }
+
+                                        if (success)
+                                        {
+                                            MessageBox.Show(Properties.Resources.RecoveryKeyCopiedToClipboard, "Relock", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        }
+                                        else
+                                        {
+                                            MessageBox.Show(Properties.Resources.FailedToCopyToClipboardPleaseTryAgain, "Relock", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        }
+                                    };
+
+                                    // Create and configure the Mask/Unmask Button
+                                    Button maskButton = new Button
+                                    {
+                                        Text = Properties.Resources.Unmask,
+                                        AutoSize = true
+                                    };
+
+                                    maskButton.Click += (sender, e) =>
+                                    {
+                                        isMasked = !isMasked;
+                                        if (isMasked)
+                                        {
+                                            recoveryKeyLabel.Text = MaskKey(originalRecoveryKey);
+                                            maskButton.Text = Properties.Resources.Unmask;
+                                        }
+                                        else
+                                        {
+                                            recoveryKeyLabel.Text = originalRecoveryKey;
+                                            maskButton.Text = Properties.Resources.Mask;
+                                        }
+                                    };
+
+                                    // Create a FlowLayoutPanel to hold the buttons and center them
+                                    FlowLayoutPanel buttonsPanel = new FlowLayoutPanel
+                                    {
+                                        AutoSize = true,
+                                        AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                                        FlowDirection = FlowDirection.LeftToRight,
+                                        WrapContents = false
+                                    };
+
+                                    buttonsPanel.Controls.Add(copyButton);
+                                    buttonsPanel.Controls.Add(maskButton);
+                                    buttonsPanel.Controls.Add(saveButton);
+                                    buttonsPanel.Controls.Add(printButton);
+
+                                    form.Controls.Add(buttonsPanel);
 
                                     // Adjust layout
                                     driveLabel.Location = new Point(0, 10);
                                     pictureBox.Location = new Point(0, driveLabel.Bottom + 10);
                                     recoveryKeyLabel.Location = new Point(0, pictureBox.Bottom + 10);
-                                    saveButton.Location = new Point(form.ClientSize.Width / 2 - saveButton.Width - 5, recoveryKeyLabel.Bottom + 10);
-                                    printButton.Location = new Point(form.ClientSize.Width / 2 + 5, recoveryKeyLabel.Bottom + 10);
+
+                                    // Place the buttons panel centered under the recovery key when form is shown
+                                    form.Shown += (s, ev) =>
+                                    {
+                                        buttonsPanel.Location = new Point((form.ClientSize.Width - buttonsPanel.Width) / 2, recoveryKeyLabel.Bottom + 10);
+                                    };
 
                                     form.ShowDialog();
                                 }
@@ -419,7 +569,11 @@ namespace Relock
                 MessageBox.Show(errorMessage, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 // Copy the error message to the clipboard
-                Clipboard.SetText(errorMessage);
+                try
+                {
+                    Clipboard.SetText(errorMessage);
+                }
+                catch { }
             }
         }
 

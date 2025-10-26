@@ -289,6 +289,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="InstallScript.iss" />
     <Content Include="relock.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

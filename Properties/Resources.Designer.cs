@@ -70,6 +70,24 @@ namespace Relock.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Copy ähnelt.
+        /// </summary>
+        public static string Copy {
+            get {
+                return ResourceManager.GetString("Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Do you want to print the recovery key? ähnelt.
+        /// </summary>
+        public static string DoYouWantToPrintTheRecoveryKey {
+            get {
+                return ResourceManager.GetString("DoYouWantToPrintTheRecoveryKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die Error ähnelt.
         /// </summary>
         public static string Error {
@@ -97,6 +115,15 @@ namespace Relock.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Failed to copy to clipboard. Please try again. ähnelt.
+        /// </summary>
+        public static string FailedToCopyToClipboardPleaseTryAgain {
+            get {
+                return ResourceManager.GetString("FailedToCopyToClipboardPleaseTryAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die Failed to get recovery key for:\r\n{0} ähnelt.
         /// </summary>
         public static string FailedToGetRecoveryKeyForRN0 {
@@ -115,6 +142,15 @@ namespace Relock.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Mask ähnelt.
+        /// </summary>
+        public static string Mask {
+            get {
+                return ResourceManager.GetString("Mask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die ERROR:  ähnelt.
         /// </summary>
         public static string OutputError {
@@ -124,11 +160,11 @@ namespace Relock.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die PDF Files (*.pdf)|*.pdf ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die PDF files|*.pdf|PNG Image|*.png|JPEG Image|*.jpg ähnelt.
         /// </summary>
-        public static string PDFFilesPdfPdf {
+        public static string PDFFilesPdfPNGImagePngJPEGImageJpg {
             get {
-                return ResourceManager.GetString("PDFFilesPdfPdf", resourceCulture);
+                return ResourceManager.GetString("PDFFilesPdfPNGImagePngJPEGImageJpg", resourceCulture);
             }
         }
         
@@ -196,6 +232,15 @@ namespace Relock.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Recovery key copied to clipboard. ähnelt.
+        /// </summary>
+        public static string RecoveryKeyCopiedToClipboard {
+            get {
+                return ResourceManager.GetString("RecoveryKeyCopiedToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die register in the explorer context menu. ähnelt.
         /// </summary>
         public static string RegisterInTheExplorerContextMenu {
@@ -256,6 +301,15 @@ namespace Relock.Properties {
         public static string SaveToPdf {
             get {
                 return ResourceManager.GetString("SaveToPdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Unmask ähnelt.
+        /// </summary>
+        public static string Unmask {
+            get {
+                return ResourceManager.GetString("Unmask", resourceCulture);
             }
         }
         
